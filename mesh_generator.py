@@ -1,15 +1,17 @@
-from typing import List, Tuple
+import math
 import numpy as np
-import trimesh as tm
-from PIL import Image, ImageOps
+
+from typing import List
+from PIL import Image
 from trimesh.base import Trimesh
+from trimesh import creation
 
 from mesh_builder import MeshBuilder
 
 
 #  Factor of original height, where original height is between 0 - 255
-HEIGHT_SCALE_FACTOR = .1
-BACKPLATE_HEIGHT = 10
+HEIGHT_SCALE_FACTOR = .003
+BACKPLATE_HEIGHT = 0.4
 
 def load_image(filename: str):
     image_array_grayscale: np.array = []
@@ -22,12 +24,8 @@ def load_image(filename: str):
     
     #  Flip 0 -> 255 black -> white scaling so dark pixels have higher values
     #  Also scale values down
-    scaler = lambda p: (255 - p) * HEIGHT_SCALE_FACTOR
+    scaler = lambda p: np.round((255 - p) * HEIGHT_SCALE_FACTOR)
     image_array_grayscale = scaler(image_array_grayscale)
-    
-    #  Add BACKPLATE height to give solid backplate on model (minimum pixel height will be BACKPLATE HEIGHT)
-    backplate_modifier = lambda p: p + BACKPLATE_HEIGHT
-    image_array_grayscale = backplate_modifier(image_array_grayscale)
     
     
     return image_array_grayscale
@@ -46,15 +44,18 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
             # fz is the height of the pixel above
             # bz is the height of the pixel below
             # rz is the height of the pixel to the right etc
+            
+            z = image_array[y][x]
+            
+            # Skip 0 values so we only extrude pixel that are not white
+            if z == 0:
+                continue
+            
             fz = 0 if y <= 0 else image_array[y - 1, x] / 25
             bz = 0 if y >= height - 1 else image_array[y + 1, x] / 25
             lz = 0 if x <= 0 else image_array[y, x - 1] / 25
             rz = 0 if x >= width - 1 else image_array[y, x + 1] / 25
-            tris.extend(create_pixel_tris(x, y, image_array[y][x] / 25, fz, bz, lz, rz))
-    
-    # Create back plate        
-    tris.append([[0, 0, 0], [0, height, 0], [width, height, 0]])
-    tris.append([[0, 0, 0], [width, height, 0], [width, 0, 0]])
+            tris.extend(create_pixel_tris(x, y, z, fz, bz, lz, rz))
     
     return tris   
 
@@ -81,7 +82,7 @@ def create_pixel_tris(x, y, z, fz, bz, lz, rz) -> List[List[int]]:
     tris.append(top_B)
     
     #If the height of this pixel and the pixel in front are the same they dont need a wall along the z axis
-    if fz != z:
+    if fz < z:
         #  Front A
         front_A = []
         front_A.append([x     ,y     ,z])
@@ -98,7 +99,7 @@ def create_pixel_tris(x, y, z, fz, bz, lz, rz) -> List[List[int]]:
         tris.append(front_B)
     
     
-    if bz != z:
+    if bz < z:
         #  Bottom A
         bottom_A = []
         bottom_A.append([x     ,y + 1 ,z])
@@ -114,7 +115,7 @@ def create_pixel_tris(x, y, z, fz, bz, lz, rz) -> List[List[int]]:
         tris.append(bottom_A)
         tris.append(bottom_B)
     
-    if lz != z:
+    if lz < z:
         #  Left A
         left_A = []
         left_A.append([x     ,y     ,z])
@@ -130,7 +131,7 @@ def create_pixel_tris(x, y, z, fz, bz, lz, rz) -> List[List[int]]:
         tris.append(left_A)
         tris.append(left_B)
     
-    if rz != z:
+    if rz < z:
         #  Right A
         right_A = []
         right_A.append([x + 1 ,y     ,z])
@@ -145,11 +146,26 @@ def create_pixel_tris(x, y, z, fz, bz, lz, rz) -> List[List[int]]:
         
         tris.append(right_A)
         tris.append(right_B)
+        
+    #  Bottom A
+    bottom_A = []
+    bottom_A.append([x     ,y     ,0])
+    bottom_A.append([x     ,y + 1 ,0])
+    bottom_A.append([x + 1 ,y     ,0])
+    
+    #  Bottam B
+    bottom_B = []
+    bottom_B.append([x + 1 ,y + 1 ,0])
+    bottom_B.append([x + 1 ,y     ,0])
+    bottom_B.append([x     ,y + 1 ,0])
+    
+    tris.append(bottom_A)
+    tris.append(bottom_B)
     
     
     return tris
 
-def create_trimesh(faces: List[List[int]]) -> Trimesh:
+def create_pixels_trimesh(faces: List[List[int]]) -> Trimesh:
     # faces: List[[x, y, z]]
     builder = MeshBuilder()
     for face in faces:
@@ -158,12 +174,16 @@ def create_trimesh(faces: List[List[int]]) -> Trimesh:
     
 
 if __name__ == "__main__":
-    filename= "pokemon_oak.png"
+    filename= "pokemon_title.png"
     grayscale_image = load_image(filename)
     faces = image_to_faces(grayscale_image)
-    mesh = create_trimesh(faces)
+    pixels = create_pixels_trimesh(faces)
+    backplate = creation.box([len(grayscale_image[0]), len(grayscale_image), BACKPLATE_HEIGHT])
+    # broken = tm.repair.broken_faces(mesh, color=[255,0,0,255])     
+    # mesh.show(smooth=False)
     # print(mesh.fill_holes())
     # mesh = mesh.slice_plane([0, 0, 1], [0, 0, 1], True)
-    mesh.show()
-    mesh.export("test.stl")
+    # mesh.show()
+    pixels.export("pixels.stl")
+    backplate.export("backplate.stl")
     

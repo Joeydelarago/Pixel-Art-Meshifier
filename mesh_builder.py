@@ -1,6 +1,5 @@
 from typing import List
 from trimesh.base import Trimesh
-import numpy as np
 
 class MeshBuilder():
     def __init__(self, backplate_depth: int = 1):
@@ -10,8 +9,7 @@ class MeshBuilder():
         self.backplate_depth = backplate_depth
         
     def show_trimesh(self):
-        mesh = Trimesh(vertices=self.vertices, faces=self.faces) 
-        self.remove_duplicate_vertices()
+        mesh = self.get_trimesh()
         mesh.show()
         
     def get_trimesh(self) -> Trimesh:   
