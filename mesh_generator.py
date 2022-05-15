@@ -8,7 +8,8 @@ from mesh_builder import MeshBuilder
 
 
 #  Factor of original height, where original height is between 0 - 255
-HEIGHT_SCALE_FACTOR = .2
+HEIGHT_SCALE_FACTOR = .1
+BACKPLATE_HEIGHT = 10
 
 def load_image(filename: str):
     image_array_grayscale: np.array = []
@@ -21,8 +22,12 @@ def load_image(filename: str):
     
     #  Flip 0 -> 255 black -> white scaling so dark pixels have higher values
     #  Also scale values down
-    scaler = lambda i: (255 - i) * HEIGHT_SCALE_FACTOR
+    scaler = lambda p: (255 - p) * HEIGHT_SCALE_FACTOR
     image_array_grayscale = scaler(image_array_grayscale)
+    
+    #  Add BACKPLATE height to give solid backplate on model (minimum pixel height will be BACKPLATE HEIGHT)
+    backplate_modifier = lambda p: p + BACKPLATE_HEIGHT
+    image_array_grayscale = backplate_modifier(image_array_grayscale)
     
     
     return image_array_grayscale
@@ -35,8 +40,9 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
     
     
     #  Create top faces and connecting sides of extruded pixel
-    for y in range(len(image_array)):
-        for x in range(len(image_array[0])):
+    for y in range(height):
+        print("Progress: ", int((y/len(image_array)) * 100), "%")
+        for x in range(width):
             # fz is the height of the pixel above
             # bz is the height of the pixel below
             # rz is the height of the pixel to the right etc
@@ -47,9 +53,8 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
             tris.extend(create_pixel_tris(x, y, image_array[y][x] / 25, fz, bz, lz, rz))
     
     # Create back plate        
-    # tris.append([0,       0,          0])
-    # tris.append([0,       width,      0])
-    # tris.append([height,  width,      0])
+    tris.append([[0, 0, 0], [0, height, 0], [width, height, 0]])
+    tris.append([[0, 0, 0], [width, height, 0], [width, 0, 0]])
     
     return tris   
 
@@ -153,17 +158,12 @@ def create_trimesh(faces: List[List[int]]) -> Trimesh:
     
 
 if __name__ == "__main__":
-    filename= "pokemon_title.png"
+    filename= "pokemon_oak.png"
     grayscale_image = load_image(filename)
-    
     faces = image_to_faces(grayscale_image)
     mesh = create_trimesh(faces)
+    # print(mesh.fill_holes())
+    # mesh = mesh.slice_plane([0, 0, 1], [0, 0, 1], True)
     mesh.show()
-    # trimesh_from_image_array_test(grayscale_image)
-    # trimesh_from_image_array(grayscale_image)
-    
-    #mesh: Trimesh = tm.load("test_cube.stl")
-    #mesh.show()
-    
-    create_trimesh()
+    mesh.export("test.stl")
     
