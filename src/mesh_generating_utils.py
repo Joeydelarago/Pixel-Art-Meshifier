@@ -14,7 +14,7 @@ BACKPLATE_HEIGHT = 1.2
 MAX_SIZE = 144
 
 
-def load_image(filename: str, invert: bool = True, flat: bool = False, fill: bool = False):
+def load_image(filename: str, invert: bool = True, flat: bool = False, max_height: int = 255, fill: bool = False):
     image_array_grayscale: np.array = []
     with Image.open(filename) as image:
         # image.thumbnail([MAX_SIZE, MAX_SIZE], Image.NEAREST)
@@ -22,19 +22,20 @@ def load_image(filename: str, invert: bool = True, flat: bool = False, fill: boo
         image_array_grayscale = np.asarray(image.convert('L'))
         print(image_array_grayscale)
 
-
-        #  Flip so image is not mirrored in output
+    #  Flip so image is not mirrored in output
     image_array_grayscale = np.flip(image_array_grayscale, 0)
 
     #  Flip 0 -> 255 black -> white scaling so dark pixels have higher values
-    #  Also scale values down
     if invert:
-        scaler = lambda p: np.round((255 - p) * HEIGHT_SCALE_FACTOR)
+        scaler = lambda p: np.round((255 - p))
         image_array_grayscale = scaler(image_array_grayscale)
 
     if flat:
-        #  Illegal sorcery
         scaler = lambda p: np.ceil(p / 255) * 255
+        image_array_grayscale = scaler(image_array_grayscale)
+
+    if max_height:
+        scaler = lambda p: np.round(max_height * (p / 255))
         image_array_grayscale = scaler(image_array_grayscale)
 
     return image_array_grayscale
@@ -181,8 +182,8 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
     return tris
 
 
-def create_mesh(image_path: str, invert: bool, flat: bool) -> Trimesh:
-    grayscale_image = load_image(image_path, invert, flat)
+def create_mesh(image_path: str, invert: bool, flat: bool, max_height: int) -> Trimesh:
+    grayscale_image = load_image(image_path, invert, flat, max_height=max_height)
     faces = image_to_faces(grayscale_image)
     return create_pixels_trimesh(faces)
 
