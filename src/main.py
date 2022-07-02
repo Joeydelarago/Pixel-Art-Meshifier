@@ -1,21 +1,19 @@
 import click
-from mesh_exporter import MeshExporter
+from trimesh import Trimesh
 
-from mesh_generator import MeshGenerator
+from mesh_generating_utils import create_backplate, create_mesh
 
 
 @click.command()
 @click.argument("image_path")
-def create_models(image_path: str) -> None:
-    generator = MeshGenerator()
-    grayscale_image = generator.load_image(image_path)
-    faces = generator.image_to_faces(grayscale_image)
-    pixels = generator.create_pixels_trimesh(faces)
-    backplate = generator.create_backplate(grayscale_image)
-    
-    exporter = MeshExporter()
-    exporter.export_stl(pixels, "pixels.stl")
-    exporter.export_stl(backplate, "backplate.stl")
-    
+@click.option("-f", "--flat", is_flag=True, default=False)
+@click.option("-i", "--invert", is_flag=True, default=False)
+def create_models(image_path: str, invert: bool, flat: bool) -> None:
+    pixels_mesh: Trimesh = create_mesh(image_path, invert, flat)
+    pixels_mesh.export("pixels.stl")
+
+    # backplate_mesh: Trimesh = create_mesh()
+
+
 if __name__ == "__main__":
     create_models()
