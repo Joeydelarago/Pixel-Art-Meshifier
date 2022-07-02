@@ -20,7 +20,6 @@ def load_image(filename: str, invert: bool = True, flat: bool = False, max_heigh
         # image.thumbnail([MAX_SIZE, MAX_SIZE], Image.NEAREST)
         image_array = np.asarray(image).tolist()
         image_array_grayscale = np.asarray(image.convert('L'))
-        print(image_array_grayscale)
 
     #  Flip so image is not mirrored in output
     image_array_grayscale = np.flip(image_array_grayscale, 0)
@@ -38,6 +37,8 @@ def load_image(filename: str, invert: bool = True, flat: bool = False, max_heigh
         scaler = lambda p: np.round(max_height * (p / 255))
         image_array_grayscale = scaler(image_array_grayscale)
 
+    if fill:
+        image_array_grayscale = np.full((len(image_array_grayscale[0]), len(image_array_grayscale)), max_height)
     return image_array_grayscale
 
 
@@ -182,8 +183,9 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
     return tris
 
 
-def create_mesh(image_path: str, invert: bool, flat: bool, max_height: int) -> Trimesh:
-    grayscale_image = load_image(image_path, invert, flat, max_height=max_height)
+def create_mesh(image_path: str, invert: bool, flat: bool, max_height: int, fill: bool) -> Trimesh:
+    grayscale_image = load_image(image_path, invert, flat, max_height, fill)
+    print(grayscale_image)
     faces = image_to_faces(grayscale_image)
     return create_pixels_trimesh(faces)
 
