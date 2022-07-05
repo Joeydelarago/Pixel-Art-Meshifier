@@ -14,7 +14,7 @@ BACKPLATE_HEIGHT = 1.2
 MAX_SIZE = 144
 
 
-def load_image(filename: str, invert: bool = True, flat: bool = False, max_height: int = 255, fill: bool = False):
+def load_image(filename: str, invert: bool = True, flat: bool = False, max_height: int = 25, fill: bool = False):
     image_array_grayscale: np.array = []
     with Image.open(filename) as image:
         # image.thumbnail([MAX_SIZE, MAX_SIZE], Image.NEAREST)
@@ -174,10 +174,10 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
             if z == 0:
                 continue
 
-            fz = 0 if y <= 0 else image_array[y - 1, x] / 25
-            bz = 0 if y >= height - 1 else image_array[y + 1, x] / 25
-            lz = 0 if x <= 0 else image_array[y, x - 1] / 25
-            rz = 0 if x >= width - 1 else image_array[y, x + 1] / 25
+            fz = 0 if y <= 0 else image_array[y - 1, x]
+            bz = 0 if y >= height - 1 else image_array[y + 1, x]
+            lz = 0 if x <= 0 else image_array[y, x - 1]
+            rz = 0 if x >= width - 1 else image_array[y, x + 1]
             tris.extend(create_pixel_tris(x, y, z, fz, bz, lz, rz))
 
     return tris
@@ -185,7 +185,6 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
 
 def create_mesh(image_path: str, invert: bool, flat: bool, max_height: int, fill: bool) -> Trimesh:
     grayscale_image = load_image(image_path, invert, flat, max_height, fill)
-    print(grayscale_image)
     faces = image_to_faces(grayscale_image)
     return create_pixels_trimesh(faces)
 
