@@ -19,9 +19,16 @@ class MeshBuilder:
         return mesh
 
     def add_face(self, vertices: List[List[int]]):
-        self.vertices.extend(vertices)
-        self.faces.append([self.vi, self.vi + 1, self.vi + 2])
-        self.vi += 3
+        face = []
+        for vertex in vertices:
+            if vertex in self.vertices:
+                face.append(self.vertices.index(vertex))
+            else:
+                self.vertices.append(vertex)
+                face.append(self.vi) 
+                self.vi += 1
+            
+        self.faces.append(face)  
 
     def remove_duplicate_vertices(self):
         print("vertex count:", len(self.vertices))
