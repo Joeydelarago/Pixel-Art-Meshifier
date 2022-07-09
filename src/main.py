@@ -1,7 +1,7 @@
 import click
 from trimesh import Trimesh
 
-from mesh_generating_utils import create_backplate, create_mesh
+from mesh_generating_utils import create_mesh
 
 
 @click.command()

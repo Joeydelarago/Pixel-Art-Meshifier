@@ -146,14 +146,6 @@ def create_pixel_tris(x, y, z, fz, bz, lz, rz) -> List[List[int]]:
     return tris
 
 
-def create_pixels_trimesh(faces: List[List[int]]) -> Trimesh:
-    # faces: List[[x, y, z]]
-    builder = MeshBuilder()
-    for face in faces:
-        builder.add_face(face)
-    return builder.get_trimesh()
-
-
 def image_to_faces(image_array: np.array) -> List[List[int]]:
     tris = []
 
@@ -186,8 +178,9 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
 def create_mesh(image_path: str, invert: bool, flat: bool, max_height: int, fill: bool) -> Trimesh:
     grayscale_image = load_image(image_path, invert, flat, max_height, fill)
     faces = image_to_faces(grayscale_image)
-    return create_pixels_trimesh(faces)
 
+    builder = MeshBuilder()
+    for face in faces:
+        builder.add_face(face)
 
-def create_backplate(grayscale_image: List[List[int]], height: int) -> Trimesh:
-    return creation.box([len(grayscale_image[0]), len(grayscale_image), height])
+    return builder.get_trimesh()
