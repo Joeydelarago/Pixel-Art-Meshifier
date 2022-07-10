@@ -5,8 +5,8 @@ block_cipher = None
 
 
 a = Analysis(
-    ['src/main_gui.py'],
-    datas=[('resources/placeholder.png', 'resources')],
+    ['main_gui.py'],
+    datas=[('../resources/placeholder.png', 'resources')],
     pathex=[],
     binaries=[],
     hiddenimports=[],
