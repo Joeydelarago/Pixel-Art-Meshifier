@@ -1,18 +1,32 @@
 #!/usr/bin/env python
 import io
+import os
+import sys
 from typing import List
 
 import PySimpleGUI as sg
 from PIL import Image, ImageTk, ImageOps
+from PIL.Image import Dither
 
-from src.mesh_generating_utils import create_mesh
+from mesh_generating_utils import create_mesh
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class MainGui:
     def __init__(self):
         self.pixels_mesh = None
         self.image_path = None
-        self.display_image = sg.Image(data=self.get_img_data("../test_images/placeholder.png", first=True))
+        self.display_image = sg.Image(data=self.get_img_data(resource_path("resources/placeholder.png"), first=True))
 
         self.window = sg.Window("Pixel Meshifier",
                                 self.build_layout(),
@@ -110,7 +124,7 @@ class MainGui:
     def get_img_data(self, image_path: str, maxsize=(500, 500), first=False):
         """ Generate image data using PIL """
         img = Image.open(image_path)
-        img = ImageOps.contain(img, maxsize, Image.NEAREST)
+        img = ImageOps.contain(img, maxsize, Dither.NONE)
         if first:
             bio = io.BytesIO()
             img.save(bio, format="PNG")

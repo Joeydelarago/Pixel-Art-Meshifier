@@ -6,7 +6,7 @@ from typing import List
 from PIL import Image
 from trimesh.base import Trimesh
 
-from src.mesh_builder import MeshBuilder
+from mesh_builder import MeshBuilder
 
 
 MAX_SIZE = 288
