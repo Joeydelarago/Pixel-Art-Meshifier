@@ -14,6 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: PyInstaller Windows
       uses: JackMcKew/pyinstaller-action-windows@main
       with:
@@ -29,11 +30,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: PyInstaller Linux
       uses: JackMcKew/pyinstaller-action-linux@main
       with:
         path: src
+
     - uses: actions/upload-artifact@v2
-    - with:
+      with:
         name: PixelMeshifier
         path: src/dist/linux
