@@ -33,7 +33,7 @@ jobs:
       uses: JackMcKew/pyinstaller-action-linux@main
       with:
         path: src
-    -uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v2
     - with:
         name: PixelMeshifier
         path: src/dist/linux
