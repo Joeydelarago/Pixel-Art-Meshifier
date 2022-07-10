@@ -1,24 +1,23 @@
+import logging
 import math
 import numpy as np
 
 from typing import List
 from PIL import Image
 from trimesh.base import Trimesh
-from trimesh import creation
 
-from mesh_builder import MeshBuilder
-
-#  Factor of original height, where original height is between 0 - 255
-HEIGHT_SCALE_FACTOR = .1
-BACKPLATE_HEIGHT = 1.2
-MAX_SIZE = 144
+from src.mesh_builder import MeshBuilder
 
 
-def load_image(filename: str, invert: bool = True, flat: bool = False, max_height: int = 25, fill: bool = False):
-    image_array_grayscale: np.array = []
+MAX_SIZE = 288
+
+
+def load_image(filename: str, invert: bool = True, flat: bool = False, max_height: int = 25,
+               fill: bool = False) -> np.array:
     with Image.open(filename) as image:
-        # image.thumbnail([MAX_SIZE, MAX_SIZE], Image.NEAREST)
-        image_array = np.asarray(image).tolist()
+        if image.width > MAX_SIZE or image.height > MAX_SIZE:
+            image.thumbnail([MAX_SIZE, MAX_SIZE], Image.NEAREST)
+
         image_array_grayscale = np.asarray(image.convert('L'))
 
     #  Flip so image is not mirrored in output
@@ -154,7 +153,7 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
 
     #  Create top faces and connecting sides of extruded pixel
     for y in range(height):
-        print("Progress: ", int((y / len(image_array)) * 100), "%")
+        logging.info("Progress: ", int((y / len(image_array)) * 100), "%")
         for x in range(width):
             # fz is the height of the pixel above
             # bz is the height of the pixel below
@@ -178,9 +177,12 @@ def image_to_faces(image_array: np.array) -> List[List[int]]:
 def create_mesh(image_path: str, invert: bool, flat: bool, max_height: int, fill: bool) -> Trimesh:
     grayscale_image = load_image(image_path, invert, flat, max_height, fill)
     faces = image_to_faces(grayscale_image)
+    logging.info("Creating mesh")
 
     builder = MeshBuilder()
     for face in faces:
         builder.add_face(face)
+
+    logging.info("Finished creating mesh")
 
     return builder.get_trimesh()
