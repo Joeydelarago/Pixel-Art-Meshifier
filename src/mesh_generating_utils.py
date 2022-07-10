@@ -28,13 +28,12 @@ def load_image(filename: str, invert: bool = True, flat: bool = False, max_heigh
         scaler = lambda p: np.round((255 - p))
         image_array_grayscale = scaler(image_array_grayscale)
 
-    if flat:
-        scaler = lambda p: np.ceil(p / 255) * 255
-        image_array_grayscale = scaler(image_array_grayscale)
-
     if max_height:
         scaler = lambda p: np.round(max_height * (p / 255))
         image_array_grayscale = scaler(image_array_grayscale)
+
+    if flat:
+        image_array_grayscale[image_array_grayscale > 0] = max_height
 
     if fill:
         image_array_grayscale = np.full((len(image_array_grayscale[0]), len(image_array_grayscale)), max_height)
