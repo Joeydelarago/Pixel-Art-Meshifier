@@ -4,9 +4,9 @@ import os
 import sys
 from typing import List
 
-import PySimpleGUI as sg
 from PIL import Image, ImageTk, ImageOps
 from PIL.Image import Dither
+import PySimpleGUI as sg
 
 from mesh_generating_utils import create_mesh
 
