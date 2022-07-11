@@ -5,7 +5,6 @@ import sys
 from typing import List
 
 from PIL import Image, ImageTk, ImageOps
-from PIL.Image import Dither
 import PySimpleGUI as sg
 
 from mesh_generating_utils import create_mesh
@@ -124,7 +123,7 @@ class MainGui:
     def get_img_data(self, image_path: str, maxsize=(500, 500), first=False):
         """ Generate image data using PIL """
         img = Image.open(image_path)
-        img = ImageOps.contain(img, maxsize, Dither.NONE)
+        img = ImageOps.contain(img, maxsize, Image.NEAREST)
         if first:
             bio = io.BytesIO()
             img.save(bio, format="PNG")
